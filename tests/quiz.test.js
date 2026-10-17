@@ -2,7 +2,14 @@
 // Run them with:  npm test
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { shuffle, isCorrect, calculatePercentage, getGrade } = require("../src/quiz.js");
+const {
+  shuffle,
+  isCorrect,
+  calculatePercentage,
+  getGrade,
+  getFeedbackMessage,
+  formatTimeLeft,
+} = require("../src/quiz.js");
 
 test("isCorrect returns true for the right answer", () => {
   assert.equal(isCorrect({ answer: 2 }, 2), true);
@@ -27,6 +34,24 @@ test("shuffle keeps every item and does not change the original array", () => {
   assert.deepEqual(original, [1, 2, 3, 4, 5]);
 });
 
-test("getGrade gives an A for exactly 90%", () => {
+test("getGrade includes the 90%, 75% and 50% boundaries", () => {
   assert.equal(getGrade(90), "A");
+  assert.equal(getGrade(89), "B");
+  assert.equal(getGrade(75), "B");
+  assert.equal(getGrade(74), "C");
+  assert.equal(getGrade(50), "C");
+  assert.equal(getGrade(49), "Keep practicing");
+});
+
+test("getFeedbackMessage returns an encouraging message for each grade", () => {
+  assert.equal(getFeedbackMessage("A"), "Outstanding work!");
+  assert.equal(getFeedbackMessage("B"), "Great job!");
+  assert.equal(getFeedbackMessage("C"), "Good effort!");
+  assert.equal(getFeedbackMessage("Keep practicing"), "Keep practicing—you'll get there!");
+});
+
+test("formatTimeLeft displays the remaining seconds", () => {
+  assert.equal(formatTimeLeft(12), "⏱ 12s");
+  assert.equal(formatTimeLeft(5), "⏱ 5s");
+  assert.equal(formatTimeLeft(0), "⏱ 0s");
 });
