@@ -5,11 +5,55 @@ const assert = require("node:assert/strict");
 const {
   shuffle,
   isCorrect,
+  createQuiz,
+  answerQuestion,
+  advanceQuestion,
+  isQuizFinished,
   calculatePercentage,
   getGrade,
   getFeedbackMessage,
   formatTimeLeft,
 } = require("../src/quiz.js");
+
+test("createQuiz creates an initial state without changing the questions", () => {
+  const questions = [{ answer: 1 }];
+  const state = createQuiz(questions);
+
+  assert.deepEqual(state, { questions, current: 0, score: 0 });
+  assert.notEqual(state.questions, questions);
+  assert.deepEqual(questions, [{ answer: 1 }]);
+});
+
+test("answerQuestion increments the score for a correct answer without mutating state", () => {
+  const state = { questions: [{ answer: 1 }], current: 0, score: 0 };
+  const result = answerQuestion(state, 1);
+
+  assert.equal(result.correct, true);
+  assert.deepEqual(result.state, { ...state, score: 1 });
+  assert.deepEqual(state, { questions: [{ answer: 1 }], current: 0, score: 0 });
+  assert.notEqual(result.state, state);
+});
+
+test("answerQuestion keeps the score for an incorrect answer without mutating state", () => {
+  const state = { questions: [{ answer: 1 }], current: 0, score: 2 };
+  const result = answerQuestion(state, 0);
+
+  assert.equal(result.correct, false);
+  assert.deepEqual(result.state, state);
+  assert.notEqual(result.state, state);
+});
+
+test("advanceQuestion returns a new state at the next question", () => {
+  const state = { questions: [{ answer: 0 }, { answer: 1 }], current: 0, score: 1 };
+
+  assert.deepEqual(advanceQuestion(state), { ...state, current: 1 });
+  assert.equal(state.current, 0);
+});
+
+test("isQuizFinished detects when the current question is past the final question", () => {
+  assert.equal(isQuizFinished({ questions: [{}, {}], current: 1 }), false);
+  assert.equal(isQuizFinished({ questions: [{}, {}], current: 2 }), true);
+});
 
 test("isCorrect returns true for the right answer", () => {
   assert.equal(isCorrect({ answer: 2 }, 2), true);

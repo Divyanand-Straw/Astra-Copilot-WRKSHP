@@ -1,7 +1,8 @@
 // UI code: connects the quiz logic (quiz.js) to the page (index.html).
 
 const QUESTION_TIME_LIMIT = 15;
-const state = { questions: [], current: 0, score: 0, secondsLeft: QUESTION_TIME_LIMIT };
+let state = createQuiz([]);
+let secondsLeft = QUESTION_TIME_LIMIT;
 
 const startScreen = document.getElementById("start-screen");
 const quizScreen = document.getElementById("quiz-screen");
@@ -32,8 +33,8 @@ function stopQuestionTimer() {
 }
 
 function updateTimerDisplay() {
-  timerText.textContent = formatTimeLeft(state.secondsLeft);
-  timerText.classList.toggle("urgent", state.secondsLeft <= 5);
+  timerText.textContent = formatTimeLeft(secondsLeft);
+  timerText.classList.toggle("urgent", secondsLeft <= 5);
 }
 
 function timeQuestionOut() {
@@ -49,12 +50,12 @@ function timeQuestionOut() {
 
 function startQuestionTimer() {
   stopQuestionTimer();
-  state.secondsLeft = QUESTION_TIME_LIMIT;
+  secondsLeft = QUESTION_TIME_LIMIT;
   updateTimerDisplay();
   questionTimer = setInterval(() => {
-    state.secondsLeft--;
+    secondsLeft--;
     updateTimerDisplay();
-    if (state.secondsLeft === 0) {
+    if (secondsLeft === 0) {
       timeQuestionOut();
     }
   }, 1000);
@@ -62,9 +63,7 @@ function startQuestionTimer() {
 
 function startQuiz() {
   stopQuestionTimer();
-  state.questions = shuffle(QUESTIONS);
-  state.current = 0;
-  state.score = 0;
+  state = createQuiz(shuffle(QUESTIONS));
   showScreen(quizScreen);
   renderQuestion();
 }
@@ -97,8 +96,9 @@ function selectAnswer(selectedIndex, selectedButton) {
   const buttons = optionsList.querySelectorAll("button");
   buttons.forEach((button) => (button.disabled = true));
 
-  if (isCorrect(question, selectedIndex)) {
-    state.score++;
+  const answer = answerQuestion(state, selectedIndex);
+  state = answer.state;
+  if (answer.correct) {
     selectedButton.classList.add("correct");
     feedbackText.textContent = "Correct!";
   } else {
@@ -113,8 +113,8 @@ function selectAnswer(selectedIndex, selectedButton) {
 
 function nextQuestion() {
   stopQuestionTimer();
-  state.current++;
-  if (state.current < state.questions.length) {
+  state = advanceQuestion(state);
+  if (!isQuizFinished(state)) {
     renderQuestion();
   } else {
     showResults();
